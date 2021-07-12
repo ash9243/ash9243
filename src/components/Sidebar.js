@@ -9,6 +9,8 @@ export default function Sidebar(props) {
         draggable={true}
         onDragStart={props.handleDragStart}
         onDragEnd={props.handleDragEnd}
+        onMouseOver={props.handleHoverOver}
+        onMouseOut={props.handleHoverOut}
         className="draggable flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
       >
         {"When "}

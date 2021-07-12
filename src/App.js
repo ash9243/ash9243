@@ -10,8 +10,8 @@ export default function App() {
   const [groups, setGroups] = useState({});
 
   useEffect(() => {
-    // console.log("selected element changed");
-  }, [selectedElement]);
+    console.log("groups", groups);
+  }, [groups]);
 
   const handleDragStart = (event) => {
     console.log("drag start ");
@@ -35,6 +35,8 @@ export default function App() {
       newElement.style.position = "absolute";
       newElement.addEventListener("dragstart", handleDragStart);
       newElement.addEventListener("dragend", handleDragEnd);
+      newElement.addEventListener("mouseover", handleHoverOver);
+      newElement.addEventListener("mouseout", handleHoverOut);
     } else {
       // console.log("inside move");
       newElement = event.currentTarget;
@@ -74,9 +76,7 @@ export default function App() {
 
       let groupNew = [];
       groupNew.push({
-        dragElement: newElement,
-        group: 1,
-        position: 1
+        dragElement: newElement
       });
 
       obj.group1 = groupNew;
@@ -88,6 +88,7 @@ export default function App() {
     } else {
       //attach on top or bottom
       //add to existing group
+
       for (let i = 0; i < elements.length; i++) {
         let currentElement = newElement;
         let existingElement = elements[i];
@@ -110,19 +111,21 @@ export default function App() {
             newElement.style.top = EEB + 1 + "px";
             newElement.style.left = EEL + "px";
 
-            let groupName = existingElement.name.split(":")[0];
+            let groupName = existingElement.name;
             let obj = { ...groups };
 
-            let groupNew = [];
-            groupNew.push({
+            let elementNew = {
               dragElement: newElement,
               group: 1,
               position: 1
-            });
+            };
 
-            obj[groupName] = [...obj[groupName], groupNew];
+            obj[groupName] = [...obj[groupName], elementNew];
+            newElement.name = `${groupName}`;
+            console.log("new element name", newElement.name);
+
             setGroups(obj);
-
+            return;
             // console.log("existing element name", existingElement.name);
           }
 
@@ -131,24 +134,69 @@ export default function App() {
             newElement.style.top = EET - elHeight - 1 + "px";
             newElement.style.left = EEL + "px";
 
-            let groupName = existingElement.name.split(":")[0];
+            let groupName = existingElement.name;
             let obj = { ...groups };
 
-            let groupNew = [];
-            groupNew.push({
+            let elementNew = {
               dragElement: newElement,
               group: 1,
               position: 1
-            });
+            };
 
-            obj[groupName] = [groupNew, ...obj[groupName]];
+            obj[groupName] = [elementNew, ...obj[groupName]];
+
+            newElement.name = `${groupName}`;
+            console.log("new element name", newElement.name);
+
             setGroups(obj);
+            return;
           }
         }
       }
+
+      let obj = { ...groups };
+
+      let groupNew = [];
+      groupNew.push({
+        dragElement: newElement
+      });
+
+      let groupLength = Object.keys(obj).length;
+      newElement.name = `group${groupLength + 1}`;
+      let groupName = newElement.name;
+      console.log("elemet name in true", newElement.name);
+      obj[groupName] = groupNew;
+
+      setGroups(obj);
+
       //elsewhere
       //create new group and add to it
     }
+  };
+
+  const handleHoverOver = (event) => {
+    // event.currentTarget.style.backgroundColor = "red";
+
+    let existingElement = event.currentTarget.cloneNode(true);
+
+    let groupName = existingElement.name;
+    let obj = { ...groups };
+
+    let elementNew = {
+      dragElement: existingElement
+    };
+
+    obj[groupName] = [...obj[groupName], elementNew];
+    existingElement.name = `${groupName}`;
+    existingElement.style.opacity = "0.3";
+    console.log("new element name", existingElement.name);
+
+    setGroups(obj);
+  };
+
+  const handleHoverOut = (event) => {
+    console.log("hover out", event.currentTarget.name);
+    event.currentTarget.style.opacity = "1";
   };
 
   const handleDragOver = () => {
@@ -222,6 +270,8 @@ export default function App() {
           <Sidebar
             handleDragStart={handleDragStart}
             handleDragEnd={handleDragEnd}
+            handleHoverOver={handleHoverOver}
+            handleHoverOut={handleHoverOut}
           />
           <MidArea handleDragOver={handleDragOver} handleDrop={handleDrop} />
         </div>
