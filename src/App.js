@@ -7,17 +7,17 @@ export default function App() {
   const [selectedElement, setSelectedElement] = useState("asdnksandmasndm,a");
   const [diffX, setDiffX] = useState(0);
   const [diffY, setDiffY] = useState(0);
-  const [group, setGroup] = useState([]);
+  const [groups, setGroups] = useState({});
 
   useEffect(() => {
-    console.log("selected element changed");
+    // console.log("selected element changed");
   }, [selectedElement]);
 
   const handleDragStart = (event) => {
     console.log("drag start ");
 
     // console.log("class list", event.currentTarget.classList);
-    console.log("previous selected element is ", selectedElement);
+    // console.log("previous selected element is ", selectedElement);
     let functionalityType = "";
     let newElement = "";
     let classList = event.currentTarget.classList;
@@ -30,20 +30,20 @@ export default function App() {
     }
 
     if (functionalityType !== "move") {
-      console.log("inside copy");
+      // console.log("inside copy");
       newElement = event.currentTarget.cloneNode(true);
       newElement.style.position = "absolute";
       newElement.addEventListener("dragstart", handleDragStart);
       newElement.addEventListener("dragend", handleDragEnd);
     } else {
-      console.log("inside move");
+      // console.log("inside move");
       newElement = event.currentTarget;
       // console.log("event current target", event.currentTarget);
     }
 
     setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
     setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
-    console.log("new element in drag start ", newElement);
+    // console.log("new element in drag start ", newElement);
     setSelectedElement(newElement);
   };
 
@@ -52,7 +52,7 @@ export default function App() {
 
     let newElement = selectedElement;
 
-    console.log("new element drag end", newElement);
+    // console.log("new element drag end", newElement);
 
     newElement.style.top = event.clientY - diffY + "px";
     newElement.style.left = event.clientX - diffX + "px";
@@ -69,16 +69,22 @@ export default function App() {
 
     if (elements.length === 0) {
       // console.log("first element to be added");
-      let group1 = [];
-      group1.push({
+
+      let obj = { ...groups };
+
+      let groupNew = [];
+      groupNew.push({
         dragElement: newElement,
         group: 1,
         position: 1
       });
-      setGroup(group1);
+
+      obj.group1 = groupNew;
+      setGroups(obj);
 
       newElement.classList.add("group1");
       newElement.classList.add("position1");
+      newElement.name = "group1:position1";
     } else {
       //attach on top or bottom
       //add to existing group
@@ -103,12 +109,40 @@ export default function App() {
           if (CET > EET + 0.5 * elHeight && CET < EET + 1.5 * elHeight) {
             newElement.style.top = EEB + 1 + "px";
             newElement.style.left = EEL + "px";
+
+            let groupName = existingElement.name.split(":")[0];
+            let obj = { ...groups };
+
+            let groupNew = [];
+            groupNew.push({
+              dragElement: newElement,
+              group: 1,
+              position: 1
+            });
+
+            obj[groupName] = [...obj[groupName], groupNew];
+            setGroups(obj);
+
+            // console.log("existing element name", existingElement.name);
           }
 
           // check if in range for top attachment
           if (CEB > EET - 0.5 * elHeight && CEB < EET + 0.5 * elHeight) {
             newElement.style.top = EET - elHeight - 1 + "px";
             newElement.style.left = EEL + "px";
+
+            let groupName = existingElement.name.split(":")[0];
+            let obj = { ...groups };
+
+            let groupNew = [];
+            groupNew.push({
+              dragElement: newElement,
+              group: 1,
+              position: 1
+            });
+
+            obj[groupName] = [groupNew, ...obj[groupName]];
+            setGroups(obj);
           }
         }
       }
@@ -180,6 +214,7 @@ export default function App() {
       ${catY + y}px
       )`;
   };
+
   return (
     <div className="bg-blue-100 pt-6 font-sans">
       <div className="h-screen overflow-hidden flex flex-row  ">
