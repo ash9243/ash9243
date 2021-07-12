@@ -4,7 +4,7 @@ import MidArea from "./components/MidArea";
 import PreviewArea from "./components/PreviewArea";
 
 export default function App() {
-  const [selectedElement, setSelectedElement] = useState("");
+  const [selectedElement, setSelectedElement] = useState("asdnksandmasndm,a");
   const [diffX, setDiffX] = useState(0);
   const [diffY, setDiffY] = useState(0);
   const [group, setGroup] = useState([]);
@@ -43,6 +43,7 @@ export default function App() {
 
     setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
     setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
+    console.log("new element in drag start ", newElement);
     setSelectedElement(newElement);
   };
 
@@ -51,7 +52,7 @@ export default function App() {
 
     let newElement = selectedElement;
 
-    console.log("new element is", newElement);
+    console.log("new element drag end", newElement);
 
     newElement.style.top = event.clientY - diffY + "px";
     newElement.style.left = event.clientX - diffX + "px";
@@ -65,6 +66,7 @@ export default function App() {
     document.getElementById("MidArea").appendChild(newElement);
 
     newElement.classList.remove("my-2");
+
     if (elements.length === 0) {
       // console.log("first element to be added");
       let group1 = [];
@@ -123,6 +125,61 @@ export default function App() {
     console.log("element dropped");
   };
 
+  const performOperations = () => {
+    // performRotation(90);
+    // performMovement();
+  };
+
+  const performRotation = (degree) => {
+    let catSprite = document.getElementById("catSprite");
+    let rotation = findRotation(catSprite);
+    let trans = rotation + degree;
+    catSprite.style.transform = `rotate(${trans}deg)`;
+  };
+
+  const findRotation = (catSprite) => {
+    let rotation = catSprite.style.transform
+      ? catSprite.style.transform.split("(")[1].replace("deg)", "")
+      : 0;
+    return parseInt(rotation, 10);
+  };
+
+  const performMovement = (steps) => {
+    let catSpriteDiv = document.getElementById("catSpriteDiv");
+
+    let catX = 0;
+    let catY = 0;
+
+    let rotation = findRotation(document.getElementById("catSprite"));
+    let cosX = Math.cos(rotation * (Math.PI / 180));
+    let sinX = Math.sin(rotation * (Math.PI / 180));
+
+    //need to find using sin and cosin
+    let x = steps * cosX;
+    let y = steps * sinX;
+
+    let splitArr = [];
+
+    if (catSpriteDiv.style.transform) {
+      splitArr = catSpriteDiv.style.transform
+        .replace("translate(", "")
+        .replace("px", "")
+        .replace("px", "")
+        .replace(")", "")
+        .replace(" ", "")
+        .split(",");
+
+      catX = parseInt(splitArr[0], 10);
+      catY = parseInt(splitArr[1], 10);
+    }
+
+    console.log("cat x ", catX);
+    console.log("cat y", catY);
+    catSpriteDiv.style.transform = `translate(
+      ${catX + x}px,
+      ${catY + y}px
+      )`;
+  };
   return (
     <div className="bg-blue-100 pt-6 font-sans">
       <div className="h-screen overflow-hidden flex flex-row  ">
@@ -134,7 +191,7 @@ export default function App() {
           <MidArea handleDragOver={handleDragOver} handleDrop={handleDrop} />
         </div>
         <div className="w-1/3 h-screen overflow-hidden flex flex-row bg-white border-t border-l border-gray-200 rounded-tl-xl ml-2">
-          <PreviewArea />
+          <PreviewArea handleClick={performOperations} />
         </div>
       </div>
     </div>

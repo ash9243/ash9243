@@ -1,8 +1,10 @@
 import React from "react";
 
-export default function CatSprite() {
+export default function CatSprite(props) {
   return (
     <svg
+      id="catSprite"
+      onClick={props.handleClick}
       xmlns="http://www.w3.org/2000/svg"
       width="95.17898101806641"
       height="100.04156036376953"
