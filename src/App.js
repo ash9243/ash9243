@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import MidArea from "./components/MidArea";
 import PreviewArea from "./components/PreviewArea";
@@ -9,12 +9,37 @@ export default function App() {
   const [diffY, setDiffY] = useState(0);
   const [group, setGroup] = useState([]);
 
+  useEffect(() => {
+    console.log("selected element changed");
+  }, [selectedElement]);
+
   const handleDragStart = (event) => {
     console.log("drag start ");
-    let newElement = event.currentTarget.cloneNode(true);
-    newElement.style.position = "absolute";
-    newElement.addEventListener("dragstart", handleDragStart);
-    newElement.addEventListener("dragend", handleDragEnd);
+
+    // console.log("class list", event.currentTarget.classList);
+    console.log("previous selected element is ", selectedElement);
+    let functionalityType = "";
+    let newElement = "";
+    let classList = event.currentTarget.classList;
+    for (let i = 0; i < classList.length; i++) {
+      //move element
+      if (classList[i].includes("group")) {
+        functionalityType = "move";
+        break;
+      }
+    }
+
+    if (functionalityType !== "move") {
+      console.log("inside copy");
+      newElement = event.currentTarget.cloneNode(true);
+      newElement.style.position = "absolute";
+      newElement.addEventListener("dragstart", handleDragStart);
+      newElement.addEventListener("dragend", handleDragEnd);
+    } else {
+      console.log("inside move");
+      newElement = event.currentTarget;
+      // console.log("event current target", event.currentTarget);
+    }
 
     setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
     setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
@@ -26,6 +51,8 @@ export default function App() {
 
     let newElement = selectedElement;
 
+    console.log("new element is", newElement);
+
     newElement.style.top = event.clientY - diffY + "px";
     newElement.style.left = event.clientX - diffX + "px";
 
@@ -33,13 +60,13 @@ export default function App() {
       .getElementById("MidArea")
       .querySelectorAll(".draggable");
 
-    console.log("elememnts is ", elements);
+    // console.log("elememnts is ", elements);
 
     document.getElementById("MidArea").appendChild(newElement);
 
     newElement.classList.remove("my-2");
     if (elements.length === 0) {
-      console.log("first element to be added");
+      // console.log("first element to be added");
       let group1 = [];
       group1.push({
         dragElement: newElement,
@@ -47,6 +74,9 @@ export default function App() {
         position: 1
       });
       setGroup(group1);
+
+      newElement.classList.add("group1");
+      newElement.classList.add("position1");
     } else {
       //attach on top or bottom
       //add to existing group
