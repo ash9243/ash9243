@@ -9,28 +9,17 @@ export default function App() {
   const [diffY, setDiffY] = useState(0);
   const [group, setGroup] = useState([]);
 
-
+  const handleDragStart = (event) => {
     console.log("drag start ");
     let newElement = event.currentTarget.cloneNode(true);
     newElement.style.position = "absolute";
+    newElement.addEventListener("dragstart", handleDragStart);
+    newElement.addEventListener("dragend", handleDragEnd);
 
     setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
     setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
     setSelectedElement(newElement);
   };
-
-  
-  const handleDragStart = (event) => {
-    console.log("drag start ");
-    let newElement = event.currentTarget.cloneNode(true);
-    newElement.style.position = "absolute";
-    newElement.addEventListener('drag')
-
-    setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
-    setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
-    setSelectedElement(newElement);
-  }
-
 
   const handleDragEnd = (event) => {
     console.log("drag end");
