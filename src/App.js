@@ -16,7 +16,6 @@ export default function App() {
   }, [groups]);
 
   const handleDragStart = (event) => {
-    event.persist();
     // console.log("drag start ");
 
     // console.log("class list", event.currentTarget.classList);
@@ -34,10 +33,6 @@ export default function App() {
 
     // if (functionalityType !== "move") {
     // console.log("inside copy");
-    console.log("event is ", event);
-    console.log("event target name", event.currentTarget.name);
-    console.log("event target value", event.currentTarget.value);
-    console.log("event target name", event.target.name);
 
     newElement = event.currentTarget.cloneNode(true);
     newElement.style.position = "absolute";
@@ -80,10 +75,8 @@ export default function App() {
 
     if (elements.length === 0) {
       newElement.group = "group1";
-
-      fillElementDetails(newElement);
-      newElement.elementType = newElement.name;
-      addToGroup(newElement.group, newElement, "newGroup");
+      let returnedElement = fillElementDetails(newElement);
+      addToGroup(returnedElement.group, returnedElement, "newGroup");
     } else {
       for (let i = 0; i < elements.length; i++) {
         let currentElement = newElement;
@@ -110,7 +103,9 @@ export default function App() {
             newElement.group = existingElement.group;
 
             console.log("existing element group ", existingElement.group);
-            addToGroup(newElement.group, newElement, "endGroup");
+
+            let returnedElement = fillElementDetails(newElement);
+            addToGroup(returnedElement.group, returnedElement, "endGroup");
 
             return;
           }
@@ -123,7 +118,8 @@ export default function App() {
             newElement.group = existingElement.group;
             console.log("existing element group ", existingElement.group);
 
-            addToGroup(newElement.group, newElement, "startGroup");
+            let returnedElement = fillElementDetails(newElement);
+            addToGroup(returnedElement.group, returnedElement, "startGroup");
 
             return;
           }
@@ -133,7 +129,8 @@ export default function App() {
       let groupLength = Object.keys(groups).length;
       newElement.group = `group${groupLength + 1}`;
 
-      addToGroup(newElement.group, newElement, "newGroup");
+      let returnedElement = fillElementDetails(newElement);
+      addToGroup(returnedElement.group, returnedElement, "newGroup");
 
       //elsewhere
       //create new group and add to it
@@ -141,11 +138,8 @@ export default function App() {
   };
 
   const fillElementDetails = (newElement) => {
-    console.log("new element name", newElement.name);
-    console.log("new element value", newElement.value);
-
-    let name = newElement.name.split(":");
-    let value = newElement.value;
+    let name = newElement.attributes["name"].value.split(":");
+    let value = newElement.attributes["value"].value;
     let elementType = "";
     let elementEventType = "";
     let elementMotionType = "";
@@ -177,6 +171,8 @@ export default function App() {
     newElement.elementMotionMoveValue = elementMotionMoveValue;
     newElement.elementRotateAnticlockwiseValue = elementRotateAnticlockwiseValue;
     newElement.elementRotatateClockwiseValue = elementRotatateClockwiseValue;
+
+    return newElement;
   };
 
   const addToGroup = (groupName, newElement, addType) => {
@@ -207,9 +203,7 @@ export default function App() {
 
   const addNewGroup = (newElement) => {
     let groupNew = [];
-    groupNew.push({
-      dragElement: newElement
-    });
+    groupNew.push(newElement);
 
     return groupNew;
   };
@@ -242,23 +236,49 @@ export default function App() {
     console.log("element dropped");
   };
 
-  const performOperations = () => {
+  const performOperations = (eventType) => {
     let stateGroups = { ...groups };
 
     let groupKeys = Object.keys(stateGroups);
 
-    console.log("state groups ", groupKeys);
     for (let i = 0; i < groupKeys.length; i++) {
       console.log("keys ", groupKeys[i]);
-      console.log("value", stateGroups[groupKeys[i]]);
+      // console.log("value", stateGroups[groupKeys[i]]);
       let groupArr = stateGroups[groupKeys[i]];
-      for (let j = 0; j < groupArr.length; j++) {
-        console.log("element name", groupArr[i].elementType);
+      // console.log("group array is ", groupArr);
+      if (
+        groupArr[0].elementType === Constants.Type_Event &&
+        groupArr[0].elementEventType === eventType
+      ) {
+        console.log("working for sprite clicked");
+        for (let j = 1; j < groupArr.length; j++) {
+          performMotion;
+        }
       }
     }
 
     // performRotation(90);
     // performMovement();
+  };
+
+  const performMotion = (element) => {
+    //motion
+    if (element.elementType === Constants.Type_Motion) {
+      //move steps
+      if (element.elementMotionType === Constants.Motion_Type_Move) {
+        performMovement(element.elementMotionMoveValue);
+      }
+      //rotate anticlockwise
+      else if (
+        element.elementMotionType === Constants.Motion_Type_RotateAnticlockwise
+      ) {
+        performRotation(element.elementRotateAnticlockwiseValue);
+      }
+      //rotate clockwise
+      else {
+        performRotation(element.elementRotatateClockwiseValue);
+      }
+    }
   };
 
   const performRotation = (degree) => {
