@@ -25,7 +25,7 @@ export default function Sidebar(props) {
         draggable={true}
         onDragStart={props.handleDragStart}
         onDragEnd={props.handleDragEnd}
-        className="flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
+        className="draggable flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
         name={Constants.Type_Event + ":" + Constants.Event_Type_Spriteclicked}
         value=""
       >
@@ -36,7 +36,7 @@ export default function Sidebar(props) {
         draggable={true}
         onDragStart={props.handleDragStart}
         onDragEnd={props.handleDragEnd}
-        className="flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
+        className="draggable flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
         name={Constants.Type_Motion + ":" + Constants.Motion_Type_Move}
         value="10"
       >
@@ -46,13 +46,13 @@ export default function Sidebar(props) {
         draggable={true}
         onDragStart={props.handleDragStart}
         onDragEnd={props.handleDragEnd}
-        className="flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
+        className="draggable flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
         name={
           Constants.Type_Motion +
           ":" +
           Constants.Motion_Type_RotateAnticlockwise
         }
-        value={"15"}
+        value={"90"}
       >
         {"Turn "}
         <Icon name="undo" size={15} className="text-white mx-2" />
@@ -62,11 +62,11 @@ export default function Sidebar(props) {
         draggable={true}
         onDragStart={props.handleDragStart}
         onDragEnd={props.handleDragEnd}
-        className="flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
+        className="draggable flex flex-row flex-wrap bg-blue-500 text-white px-2 py-1 my-2 text-sm cursor-pointer"
         name={
           Constants.Type_Motion + ":" + Constants.Motion_Type_RotateClockwise
         }
-        value={"15"}
+        value={"90"}
       >
         {"Turn "}
         <Icon name="redo" size={15} className="text-white mx-2" />

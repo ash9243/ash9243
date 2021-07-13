@@ -54,11 +54,7 @@ export default function App() {
   };
 
   const handleDragEnd = (event) => {
-    // console.log("drag end");
-
     let newElement = selectedElement;
-
-    // console.log("new element drag end", newElement);
 
     newElement.style.top = event.clientY - diffY + "px";
     newElement.style.left = event.clientX - diffX + "px";
@@ -67,14 +63,13 @@ export default function App() {
       .getElementById("MidArea")
       .querySelectorAll(".draggable");
 
-    // console.log("elememnts is ", elements);
-
     document.getElementById("MidArea").appendChild(newElement);
 
     newElement.classList.remove("my-2");
 
     if (elements.length === 0) {
       newElement.group = "group1";
+      newElement.position = 1;
       let returnedElement = fillElementDetails(newElement);
       addToGroup(returnedElement.group, returnedElement, "newGroup");
     } else {
@@ -93,32 +88,79 @@ export default function App() {
         let elHeight = currentElement.getBoundingClientRect().height;
         let elWidth = currentElement.getBoundingClientRect().width;
 
+        console.log(
+          "x range condition",
+          CEL > EEL - elWidth && CEL < EEL + 2 * elWidth
+        );
+        console.log(
+          "y range bottom condition ",
+          CET > EET + 0.5 * elHeight && CET < EET + 2 * elHeight
+        );
+        console.log(
+          "y range top condition ",
+          CEB > EET - elHeight && CEB < EET + elHeight
+        );
+
         // check if in range of x direction
-        if (CEL > EEL - 0.25 * elWidth && CEL < EEL + 1.25 * elWidth) {
+        if (CEL > EEL - elWidth && CEL < EEL + 2 * elWidth) {
           // check if in range for bottom attachment
-          if (CET > EET + 0.5 * elHeight && CET < EET + 1.5 * elHeight) {
+          if (CET > EET + 0.5 * elHeight && CET < EET + 2 * elHeight) {
+            let returnedElement = fillElementDetails(newElement);
+
+            if (returnedElement.elementType === Constants.Type_Event) {
+              newElement.remove();
+              return;
+            }
+
+            if (groups[existingElement.group][existingElement.position]) {
+              console.log(
+                "adding in middle bottom",
+                groups[existingElement.group][existingElement.position]
+              );
+              newElement.remove();
+              return;
+            }
+
             newElement.style.top = EEB + 1 + "px";
             newElement.style.left = EEL + "px";
 
             newElement.group = existingElement.group;
-
+            newElement.position = existingElement.position + 1;
             console.log("existing element group ", existingElement.group);
 
-            let returnedElement = fillElementDetails(newElement);
             addToGroup(returnedElement.group, returnedElement, "endGroup");
 
             return;
           }
 
           // check if in range for top attachment
-          if (CEB > EET - 0.5 * elHeight && CEB < EET + 0.5 * elHeight) {
+          if (CEB > EET - elHeight && CEB < EET + 0.5 * elHeight) {
+            if (existingElement.elementType === Constants.Type_Event) {
+              newElement.remove();
+              return;
+            }
+
+            if (groups[existingElement.group][existingElement.position - 2]) {
+              console.log(
+                "adding in middle top",
+                groups[existingElement.group][existingElement.position - 2]
+              );
+              newElement.remove();
+
+              return;
+            }
+
             newElement.style.top = EET - elHeight - 1 + "px";
             newElement.style.left = EEL + "px";
 
             newElement.group = existingElement.group;
+            newElement.position = 1;
+            incrementPosition(newElement.group);
+
             console.log("existing element group ", existingElement.group);
 
             let returnedElement = fillElementDetails(newElement);
+
             addToGroup(returnedElement.group, returnedElement, "startGroup");
 
             return;
@@ -128,6 +170,7 @@ export default function App() {
 
       let groupLength = Object.keys(groups).length;
       newElement.group = `group${groupLength + 1}`;
+      newElement.position = 1;
 
       let returnedElement = fillElementDetails(newElement);
       addToGroup(returnedElement.group, returnedElement, "newGroup");
@@ -135,6 +178,18 @@ export default function App() {
       //elsewhere
       //create new group and add to it
     }
+  };
+
+  const incrementPosition = (groupName) => {
+    let objGroup = [...groups[groupName]];
+
+    for (let i = 0; i < objGroup.length; i++) {
+      objGroup[i].position = objGroup[i].position + 1;
+    }
+
+    groups[groupName] = objGroup;
+
+    setGroups(groups);
   };
 
   const fillElementDetails = (newElement) => {
@@ -251,8 +306,14 @@ export default function App() {
         groupArr[0].elementEventType === eventType
       ) {
         console.log("working for sprite clicked");
+        console.log("working for group arr", groupArr);
         for (let j = 1; j < groupArr.length; j++) {
-          performMotion;
+          console.log("perform motion on ", groupArr[j].elementMotionType);
+          setTimeout(() => {
+            performMotion(groupArr[j]);
+            console.log("set to 10s");
+            console.log("perform for ", j);
+          }, 10000);
         }
       }
     }
@@ -266,17 +327,19 @@ export default function App() {
     if (element.elementType === Constants.Type_Motion) {
       //move steps
       if (element.elementMotionType === Constants.Motion_Type_Move) {
-        performMovement(element.elementMotionMoveValue);
+        performMovement(parseInt(element.elementMotionMoveValue, 10));
       }
       //rotate anticlockwise
       else if (
         element.elementMotionType === Constants.Motion_Type_RotateAnticlockwise
       ) {
-        performRotation(element.elementRotateAnticlockwiseValue);
+        performRotation(
+          parseInt(element.elementRotateAnticlockwiseValue, 10) * -1
+        );
       }
       //rotate clockwise
       else {
-        performRotation(element.elementRotatateClockwiseValue);
+        performRotation(parseInt(element.elementRotatateClockwiseValue, 10));
       }
     }
   };
@@ -285,6 +348,9 @@ export default function App() {
     let catSprite = document.getElementById("catSprite");
     let rotation = findRotation(catSprite);
     let trans = rotation + degree;
+    console.log("rotation current", rotation);
+    console.log("rotation send", degree);
+    console.log("trans", trans);
     catSprite.style.transform = `rotate(${trans}deg)`;
   };
 
