@@ -3,6 +3,8 @@ import Sidebar from "./components/Sidebar";
 import MidArea from "./components/MidArea";
 import PreviewArea from "./components/PreviewArea";
 
+import * as Constants from "./Common/Constants";
+
 export default function App() {
   const [selectedElement, setSelectedElement] = useState("asdnksandmasndm,a");
   const [diffX, setDiffX] = useState(0);
@@ -14,34 +16,41 @@ export default function App() {
   }, [groups]);
 
   const handleDragStart = (event) => {
-    console.log("drag start ");
+    event.persist();
+    // console.log("drag start ");
 
     // console.log("class list", event.currentTarget.classList);
     // console.log("previous selected element is ", selectedElement);
-    let functionalityType = "";
+    // let functionalityType = "";
     let newElement = "";
-    let classList = event.currentTarget.classList;
-    for (let i = 0; i < classList.length; i++) {
-      //move element
-      if (classList[i].includes("group")) {
-        functionalityType = "move";
-        break;
-      }
-    }
+    // let classList = event.currentTarget.classList;
+    // for (let i = 0; i < classList.length; i++) {
+    //move element
+    // if (classList[i].includes("group")) {
+    // functionalityType = "move";
+    // break;
+    // }
+    // }
 
-    if (functionalityType !== "move") {
-      // console.log("inside copy");
-      newElement = event.currentTarget.cloneNode(true);
-      newElement.style.position = "absolute";
-      newElement.addEventListener("dragstart", handleDragStart);
-      newElement.addEventListener("dragend", handleDragEnd);
-      newElement.addEventListener("mouseover", handleHoverOver);
-      newElement.addEventListener("mouseout", handleHoverOut);
-    } else {
-      // console.log("inside move");
-      newElement = event.currentTarget;
-      // console.log("event current target", event.currentTarget);
-    }
+    // if (functionalityType !== "move") {
+    // console.log("inside copy");
+    console.log("event is ", event);
+    console.log("event target name", event.currentTarget.name);
+    console.log("event target value", event.currentTarget.value);
+    console.log("event target name", event.target.name);
+
+    newElement = event.currentTarget.cloneNode(true);
+    newElement.style.position = "absolute";
+    newElement.addEventListener("dragstart", handleDragStart);
+    newElement.addEventListener("dragend", handleDragEnd);
+    newElement.addEventListener("mouseover", handleHoverOver);
+    newElement.addEventListener("mouseout", handleHoverOut);
+    // }
+    // else {
+    // console.log("inside move");
+    // newElement = event.currentTarget;
+    // console.log("event current target", event.currentTarget);
+    // }
 
     setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
     setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
@@ -50,7 +59,7 @@ export default function App() {
   };
 
   const handleDragEnd = (event) => {
-    console.log("drag end");
+    // console.log("drag end");
 
     let newElement = selectedElement;
 
@@ -70,25 +79,12 @@ export default function App() {
     newElement.classList.remove("my-2");
 
     if (elements.length === 0) {
-      // console.log("first element to be added");
+      newElement.group = "group1";
 
-      let obj = { ...groups };
-
-      let groupNew = [];
-      groupNew.push({
-        dragElement: newElement
-      });
-
-      obj.group1 = groupNew;
-      setGroups(obj);
-
-      newElement.classList.add("group1");
-      newElement.classList.add("position1");
-      newElement.name = "group1:position1";
+      fillElementDetails(newElement);
+      newElement.elementType = newElement.name;
+      addToGroup(newElement.group, newElement, "newGroup");
     } else {
-      //attach on top or bottom
-      //add to existing group
-
       for (let i = 0; i < elements.length; i++) {
         let currentElement = newElement;
         let existingElement = elements[i];
@@ -111,22 +107,12 @@ export default function App() {
             newElement.style.top = EEB + 1 + "px";
             newElement.style.left = EEL + "px";
 
-            let groupName = existingElement.name;
-            let obj = { ...groups };
+            newElement.group = existingElement.group;
 
-            let elementNew = {
-              dragElement: newElement,
-              group: 1,
-              position: 1
-            };
+            console.log("existing element group ", existingElement.group);
+            addToGroup(newElement.group, newElement, "endGroup");
 
-            obj[groupName] = [...obj[groupName], elementNew];
-            newElement.name = `${groupName}`;
-            console.log("new element name", newElement.name);
-
-            setGroups(obj);
             return;
-            // console.log("existing element name", existingElement.name);
           }
 
           // check if in range for top attachment
@@ -134,69 +120,118 @@ export default function App() {
             newElement.style.top = EET - elHeight - 1 + "px";
             newElement.style.left = EEL + "px";
 
-            let groupName = existingElement.name;
-            let obj = { ...groups };
+            newElement.group = existingElement.group;
+            console.log("existing element group ", existingElement.group);
 
-            let elementNew = {
-              dragElement: newElement,
-              group: 1,
-              position: 1
-            };
+            addToGroup(newElement.group, newElement, "startGroup");
 
-            obj[groupName] = [elementNew, ...obj[groupName]];
-
-            newElement.name = `${groupName}`;
-            console.log("new element name", newElement.name);
-
-            setGroups(obj);
             return;
           }
         }
       }
 
-      let obj = { ...groups };
+      let groupLength = Object.keys(groups).length;
+      newElement.group = `group${groupLength + 1}`;
 
-      let groupNew = [];
-      groupNew.push({
-        dragElement: newElement
-      });
-
-      let groupLength = Object.keys(obj).length;
-      newElement.name = `group${groupLength + 1}`;
-      let groupName = newElement.name;
-      console.log("elemet name in true", newElement.name);
-      obj[groupName] = groupNew;
-
-      setGroups(obj);
+      addToGroup(newElement.group, newElement, "newGroup");
 
       //elsewhere
       //create new group and add to it
     }
   };
 
-  const handleHoverOver = (event) => {
-    // event.currentTarget.style.backgroundColor = "red";
+  const fillElementDetails = (newElement) => {
+    console.log("new element name", newElement.name);
+    console.log("new element value", newElement.value);
 
-    let existingElement = event.currentTarget.cloneNode(true);
+    let name = newElement.name.split(":");
+    let value = newElement.value;
+    let elementType = "";
+    let elementEventType = "";
+    let elementMotionType = "";
+    let elementMotionMoveValue = "";
+    let elementRotateAnticlockwiseValue = "";
+    let elementRotatateClockwiseValue = "";
 
-    let groupName = existingElement.name;
+    elementType = name[0];
+
+    if (elementType === Constants.Type_Event) {
+      elementEventType = name[1];
+    } else {
+      elementMotionType = name[1];
+    }
+
+    if (elementMotionType === Constants.Motion_Type_Move) {
+      elementMotionMoveValue = value;
+    } else if (
+      elementMotionType === Constants.Motion_Type_RotateAnticlockwise
+    ) {
+      elementRotateAnticlockwiseValue = value;
+    } else {
+      elementRotatateClockwiseValue = value;
+    }
+
+    newElement.elementType = elementType;
+    newElement.elementEventType = elementEventType;
+    newElement.elementMotionType = elementMotionType;
+    newElement.elementMotionMoveValue = elementMotionMoveValue;
+    newElement.elementRotateAnticlockwiseValue = elementRotateAnticlockwiseValue;
+    newElement.elementRotatateClockwiseValue = elementRotatateClockwiseValue;
+  };
+
+  const addToGroup = (groupName, newElement, addType) => {
     let obj = { ...groups };
+    if (Object.keys(obj).length === 0) {
+      obj[groupName] = addNewGroup(newElement);
+    } else {
+      let objGroup = [];
 
-    let elementNew = {
-      dragElement: existingElement
-    };
+      if (obj[groupName]) {
+        objGroup = [...obj[groupName]];
+      }
 
-    obj[groupName] = [...obj[groupName], elementNew];
-    existingElement.name = `${groupName}`;
-    existingElement.style.opacity = "0.3";
-    console.log("new element name", existingElement.name);
+      if (addType === "newGroup") {
+        objGroup = addNewGroup(newElement);
+      } else if (addType === "startGroup") {
+        objGroup = [newElement, ...objGroup];
+      } else if (addType === "endGroup") {
+        objGroup = [...objGroup, newElement];
+      } else {
+      }
+
+      obj[groupName] = objGroup;
+    }
 
     setGroups(obj);
   };
 
+  const addNewGroup = (newElement) => {
+    let groupNew = [];
+    groupNew.push({
+      dragElement: newElement
+    });
+
+    return groupNew;
+  };
+
+  const handleHoverOver = (event) => {
+    // event.currentTarget.style.backgroundColor = "red";
+    // let existingElement = event.currentTarget.cloneNode(true);
+    // let groupName = existingElement.name;
+    // let obj = { ...groups };
+    // let elementNew = {
+    //   dragElement: existingElement
+    // };
+    // obj[groupName] = [...obj[groupName], elementNew];
+    // existingElement.name = `${groupName}`;
+    // existingElement.style.opacity = "0.3";
+    // console.log("new element name", existingElement.name);
+    // setGroups(obj);
+  };
+
   const handleHoverOut = (event) => {
-    console.log("hover out", event.currentTarget.name);
-    event.currentTarget.style.opacity = "1";
+    // console.log("hover out", event.currentTarget.name);
+    // event.currentTarget.style.opacity = "1";
   };
 
   const handleDragOver = () => {
@@ -208,6 +243,20 @@ export default function App() {
   };
 
   const performOperations = () => {
+    let stateGroups = { ...groups };
+
+    let groupKeys = Object.keys(stateGroups);
+
+    console.log("state groups ", groupKeys);
+    for (let i = 0; i < groupKeys.length; i++) {
+      console.log("keys ", groupKeys[i]);
+      console.log("value", stateGroups[groupKeys[i]]);
+      let groupArr = stateGroups[groupKeys[i]];
+      for (let j = 0; j < groupArr.length; j++) {
+        console.log("element name", groupArr[i].elementType);
+      }
+    }
+
     // performRotation(90);
     // performMovement();
   };
