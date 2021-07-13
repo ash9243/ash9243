@@ -341,7 +341,7 @@ export default function App() {
       ) {
         for (let j = 1; j < groupArr.length; j++) {
           performMotion(groupArr[j]);
-          sleep(1000);
+          // sleep(1000);
         }
       }
     }
