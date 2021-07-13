@@ -6,34 +6,26 @@ import PreviewArea from "./components/PreviewArea";
 import * as Constants from "./Common/Constants";
 
 export default function App() {
-  const [selectedElement, setSelectedElement] = useState("asdnksandmasndm,a");
+  const [selectedElement, setSelectedElement] = useState("");
   const [diffX, setDiffX] = useState(0);
   const [diffY, setDiffY] = useState(0);
   const [groups, setGroups] = useState({});
+  const [removedElement, setRemovedElement] = useState("");
+  const [selectedId, setSelectedId] = useState("");
+  let localSelectedId = "";
 
   useEffect(() => {
     console.log("groups", groups);
   }, [groups]);
 
   const handleDragStart = (event) => {
-    // console.log("drag start ");
-
-    // console.log("class list", event.currentTarget.classList);
-    // console.log("previous selected element is ", selectedElement);
-    // let functionalityType = "";
+    let functionalityType = "";
     let newElement = "";
-    // let classList = event.currentTarget.classList;
-    // for (let i = 0; i < classList.length; i++) {
-    //move element
-    // if (classList[i].includes("group")) {
-    // functionalityType = "move";
-    // break;
-    // }
-    // }
 
+    if (event.currentTarget.group) {
+      functionalityType = "move";
+    }
     // if (functionalityType !== "move") {
-    // console.log("inside copy");
-
     newElement = event.currentTarget.cloneNode(true);
     newElement.style.position = "absolute";
     newElement.addEventListener("dragstart", handleDragStart);
@@ -41,20 +33,71 @@ export default function App() {
     newElement.addEventListener("mouseover", handleHoverOver);
     newElement.addEventListener("mouseout", handleHoverOut);
     // }
-    // else {
-    // console.log("inside move");
-    // newElement = event.currentTarget;
-    // console.log("event current target", event.currentTarget);
-    // }
+    if (functionalityType === "move") {
+      //check for last element
+
+      setRemovedElement(event.currentTarget);
+      setSelectedId(event.currentTarget.id);
+      localSelectedId = event.currentTarget.id;
+    } else {
+      setSelectedId("");
+      setRemovedElement("");
+      localSelectedId = "";
+    }
 
     setDiffX(event.clientX - event.currentTarget.getBoundingClientRect().left);
     setDiffY(event.clientY - event.currentTarget.getBoundingClientRect().top);
-    // console.log("new element in drag start ", newElement);
     setSelectedElement(newElement);
   };
 
+  const checkGroups = (element) => {
+    let obj = { ...groups };
+    let idArr = element.id.split(":");
+    let groupName = idArr[0];
+    let position = idArr[1];
+
+    if (obj[groupName].length === 1) {
+      //destroy the whole group
+      delete obj[groupName];
+    } else if (position === obj[groupName].length) {
+      obj[groupName].pop();
+    }
+
+    setGroups(obj);
+  };
+
+  const topOrMiddle = (element) => {
+    let obj = { ...groups };
+    let idArr = element.id.split(":");
+    let groupName = idArr[0];
+    let position = idArr[1];
+
+    if (obj[groupName].length === 1) {
+      return false;
+    } else {
+      if (position === 1) {
+        return true;
+      } else if (position < obj[groupName].length) {
+        return true;
+      }
+    }
+  };
+
   const handleDragEnd = (event) => {
-    let newElement = selectedElement;
+    let newElement = "";
+
+    if (localSelectedId !== "") {
+      newElement = document.getElementById(localSelectedId);
+
+      //check and remove groups
+      if (topOrMiddle(newElement)) {
+        return;
+      }
+
+      checkGroups(newElement);
+    } else {
+      newElement = selectedElement;
+    }
 
     newElement.style.top = event.clientY - diffY + "px";
     newElement.style.left = event.clientX - diffX + "px";
@@ -65,12 +108,28 @@ export default function App() {
 
     document.getElementById("MidArea").appendChild(newElement);
 
+    let MABR = document.getElementById("MidArea").getBoundingClientRect();
+
+    let NEBR = newElement.getBoundingClientRect();
+
+    if (
+      NEBR.left < MABR.left ||
+      NEBR.top < MABR.top ||
+      NEBR.right > MABR.right ||
+      NEBR.bottom > MABR.bottom
+    ) {
+      newElement.remove();
+      return;
+    }
+
     newElement.classList.remove("my-2");
 
     if (elements.length === 0) {
       newElement.group = "group1";
       newElement.position = 1;
+      console.log("new element", newElement.getBoundingClientRect());
       let returnedElement = fillElementDetails(newElement);
+      returnedElement.id = newElement.group + ":" + newElement.position;
       addToGroup(returnedElement.group, returnedElement, "newGroup");
     } else {
       for (let i = 0; i < elements.length; i++) {
@@ -88,19 +147,6 @@ export default function App() {
         let elHeight = currentElement.getBoundingClientRect().height;
         let elWidth = currentElement.getBoundingClientRect().width;
 
-        console.log(
-          "x range condition",
-          CEL > EEL - elWidth && CEL < EEL + 2 * elWidth
-        );
-        console.log(
-          "y range bottom condition ",
-          CET > EET + 0.5 * elHeight && CET < EET + 2 * elHeight
-        );
-        console.log(
-          "y range top condition ",
-          CEB > EET - elHeight && CEB < EET + elHeight
-        );
-
         // check if in range of x direction
         if (CEL > EEL - elWidth && CEL < EEL + 2 * elWidth) {
           // check if in range for bottom attachment
@@ -108,25 +154,23 @@ export default function App() {
             let returnedElement = fillElementDetails(newElement);
 
             if (returnedElement.elementType === Constants.Type_Event) {
-              newElement.remove();
+              returnedElement.remove();
               return;
             }
 
             if (groups[existingElement.group][existingElement.position]) {
-              console.log(
-                "adding in middle bottom",
-                groups[existingElement.group][existingElement.position]
-              );
-              newElement.remove();
+              returnedElement.remove();
               return;
             }
 
-            newElement.style.top = EEB + 1 + "px";
-            newElement.style.left = EEL + "px";
+            returnedElement.style.top = EEB + 1 + "px";
+            returnedElement.style.left = EEL + "px";
 
-            newElement.group = existingElement.group;
-            newElement.position = existingElement.position + 1;
-            console.log("existing element group ", existingElement.group);
+            returnedElement.group = existingElement.group;
+            returnedElement.position = existingElement.position + 1;
+
+            returnedElement.id =
+              returnedElement.group + ":" + returnedElement.position;
 
             addToGroup(returnedElement.group, returnedElement, "endGroup");
 
@@ -141,10 +185,6 @@ export default function App() {
             }
 
             if (groups[existingElement.group][existingElement.position - 2]) {
-              console.log(
-                "adding in middle top",
-                groups[existingElement.group][existingElement.position - 2]
-              );
               newElement.remove();
 
               return;
@@ -157,9 +197,9 @@ export default function App() {
             newElement.position = 1;
             incrementPosition(newElement.group);
 
-            console.log("existing element group ", existingElement.group);
-
             let returnedElement = fillElementDetails(newElement);
+            returnedElement.id =
+              returnedElement.group + ":" + returnedElement.position;
 
             addToGroup(returnedElement.group, returnedElement, "startGroup");
 
@@ -173,6 +213,9 @@ export default function App() {
       newElement.position = 1;
 
       let returnedElement = fillElementDetails(newElement);
+      returnedElement.id =
+        returnedElement.group + ":" + returnedElement.position;
+
       addToGroup(returnedElement.group, returnedElement, "newGroup");
 
       //elsewhere
@@ -274,22 +317,16 @@ export default function App() {
     // obj[groupName] = [...obj[groupName], elementNew];
     // existingElement.name = `${groupName}`;
     // existingElement.style.opacity = "0.3";
-    // console.log("new element name", existingElement.name);
     // setGroups(obj);
   };
 
   const handleHoverOut = (event) => {
-    // console.log("hover out", event.currentTarget.name);
     // event.currentTarget.style.opacity = "1";
   };
 
-  const handleDragOver = () => {
-    console.log("drag over");
-  };
+  const handleDragOver = () => {};
 
-  const handleDrop = () => {
-    console.log("element dropped");
-  };
+  const handleDrop = () => {};
 
   const performOperations = (eventType) => {
     let stateGroups = { ...groups };
@@ -297,29 +334,26 @@ export default function App() {
     let groupKeys = Object.keys(stateGroups);
 
     for (let i = 0; i < groupKeys.length; i++) {
-      console.log("keys ", groupKeys[i]);
-      // console.log("value", stateGroups[groupKeys[i]]);
       let groupArr = stateGroups[groupKeys[i]];
-      // console.log("group array is ", groupArr);
       if (
         groupArr[0].elementType === Constants.Type_Event &&
         groupArr[0].elementEventType === eventType
       ) {
-        console.log("working for sprite clicked");
-        console.log("working for group arr", groupArr);
         for (let j = 1; j < groupArr.length; j++) {
-          console.log("perform motion on ", groupArr[j].elementMotionType);
-          setTimeout(() => {
-            performMotion(groupArr[j]);
-            console.log("set to 10s");
-            console.log("perform for ", j);
-          }, 10000);
+          performMotion(groupArr[j]);
+          sleep(1000);
         }
       }
     }
+  };
 
-    // performRotation(90);
-    // performMovement();
+  const sleep = (milliseconds) => {
+    var start = new Date().getTime();
+    for (var i = 0; i < 1e7; i++) {
+      if (new Date().getTime() - start > milliseconds) {
+        break;
+      }
+    }
   };
 
   const performMotion = (element) => {
@@ -348,9 +382,6 @@ export default function App() {
     let catSprite = document.getElementById("catSprite");
     let rotation = findRotation(catSprite);
     let trans = rotation + degree;
-    console.log("rotation current", rotation);
-    console.log("rotation send", degree);
-    console.log("trans", trans);
     catSprite.style.transform = `rotate(${trans}deg)`;
   };
 
@@ -390,8 +421,6 @@ export default function App() {
       catY = parseInt(splitArr[1], 10);
     }
 
-    console.log("cat x ", catX);
-    console.log("cat y", catY);
     catSpriteDiv.style.transform = `translate(
       ${catX + x}px,
       ${catY + y}px
@@ -407,6 +436,7 @@ export default function App() {
             handleDragEnd={handleDragEnd}
             handleHoverOver={handleHoverOver}
             handleHoverOut={handleHoverOut}
+            handleClick={performOperations}
           />
           <MidArea handleDragOver={handleDragOver} handleDrop={handleDrop} />
         </div>

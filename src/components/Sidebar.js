@@ -52,7 +52,7 @@ export default function Sidebar(props) {
           ":" +
           Constants.Motion_Type_RotateAnticlockwise
         }
-        value={"90"}
+        value={"15"}
       >
         {"Turn "}
         <Icon name="undo" size={15} className="text-white mx-2" />
@@ -66,11 +66,27 @@ export default function Sidebar(props) {
         name={
           Constants.Type_Motion + ":" + Constants.Motion_Type_RotateClockwise
         }
-        value={"90"}
+        value={"15"}
       >
         {"Turn "}
         <Icon name="redo" size={15} className="text-white mx-2" />
         {"15 degrees"}
+      </div>
+
+      <div
+        onClick={() => props.handleClick(Constants.Event_Type_Flagclicked)}
+        className="draggable flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-8 text-sm cursor-pointer"
+      >
+        Click for Flag
+        <Icon name="flag" size={15} className="text-green-600 mx-2" />
+      </div>
+
+      <div
+        onClick={() => props.handleClick(Constants.Event_Type_Flagclicked)}
+        className="draggable flex flex-row flex-wrap bg-yellow-500 text-white px-2 py-1 my-8 text-sm cursor-pointer"
+      >
+        elements can be pulled in mid area but moving them in midarea might be
+        ambiguous
       </div>
     </div>
   );
